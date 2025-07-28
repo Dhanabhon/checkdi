@@ -54,7 +54,7 @@ CheckDi follows a 3-tier architecture for clear separation of concerns:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/[YOUR_USERNAME]/checkdi.git
+   git clone https://github.com/Dhanabhon/checkdi.git
    cd checkdi
    ```
 
