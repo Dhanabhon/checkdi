@@ -3,18 +3,27 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.9%2B-blue" alt="Python Version">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
+  <img src="https://img.shields.io/badge/Accuracy-81.36%25-brightgreen" alt="Model Accuracy">
 </p>
 
-CheckDi is an AI-powered fake news verification assistant specifically designed for the Thai language. Leveraging state-of-the-art natural language processing techniques and real data from Thailand's Anti-Fake News Center (AFNC), CheckDi helps users identify potentially misleading information in Thai news content.
+<p align="center">
+  <img src="assets/screenshot-fake-news1.png" alt="CheckDi Demo Screenshot" width="800">
+</p>
+
+CheckDi is an AI-powered fake news verification assistant specifically designed for the Thai language. Leveraging machine learning techniques with real data from Thailand's Anti-Fake News Center (AFNC), CheckDi helps users identify potentially misleading information in Thai news content through an intuitive Google-like interface.
 
 This project demonstrates a comprehensive AI development pipeline, from data collection and preprocessing to model training and deployment of a user-friendly web application.
 
 ## Key Features
 
-- **News Classification**: Utilizes a fine-tuned WangchanBERTa model to predict whether input text is "Real News" or "Fake News"
-- **Confidence Scoring**: Provides probability scores to indicate the model's confidence in its predictions
-- **Explainable AI (XAI)**: Highlights key words and phrases that influenced the model's decision, enhancing transparency
-- **Intuitive Web Interface**: Built with Streamlit for a seamless user experience
+- **High-Accuracy Classification**: SVM-based model achieving 81.36% accuracy for Thai fake news detection
+- **Confidence Scoring**: Provides probability scores with visual confidence bars
+- **Google-like Interface**: Clean, responsive web UI with intuitive design
+- **Real-time Analysis**: Instant predictions with loading animations
+- **Mobile Responsive**: Works seamlessly across desktop and mobile devices
+- **Thai Language Optimized**: Specifically designed for Thai news content
+- **Example Headlines**: Pre-loaded examples for quick testing
+- **Technical Transparency**: Model details and prediction probabilities
 
 ## Architecture
 
@@ -27,11 +36,12 @@ CheckDi follows a 3-tier architecture for clear separation of concerns:
 ## Technology Stack
 
 - **Language**: Python 3.9+
-- **Data Science**: Pandas, NumPy, Scikit-learn
-- **Web Scraping**: BeautifulSoup4, Requests
-- **AI/NLP**: PyTorch, Hugging Face Transformers, wangchanberta-base-att-spm-uncased
-- **Web Framework**: Streamlit
-- **Development Tools**: Jupyter Notebook, Visual Studio Code
+- **Machine Learning**: Scikit-learn, TF-IDF Vectorization, Support Vector Machine (SVM)
+- **Data Science**: Pandas, NumPy, Joblib
+- **Visualization**: Matplotlib, Seaborn, WordCloud
+- **Web Framework**: Streamlit with custom CSS styling
+- **Development Tools**: Jupyter Notebook, Conda/Mamba package management
+- **Font Support**: Noto Sans Thai for proper Thai text rendering
 
 ## Setup and Installation
 
@@ -48,108 +58,138 @@ CheckDi follows a 3-tier architecture for clear separation of concerns:
    cd checkdi
    ```
 
-2. Create and activate a virtual environment:
+2. Set up the environment (recommended - using conda):
    ```bash
-   # Create virtual environment
-   python -m venv venv
-   
-   # Activate it (choose based on your OS)
-   .\venv\Scripts\activate    # Windows
-   source venv/bin/activate   # macOS/Linux
+   # Using conda/mamba (recommended)
+   conda env create -f environment.yml
+   conda activate checkdi
    ```
 
-3. Install dependencies:
+   Or using pip:
    ```bash
+   # Using pip (alternative)
+   python -m venv venv
+   source venv/bin/activate  # macOS/Linux
+   # .\venv\Scripts\activate  # Windows
    pip install -r requirements.txt
    ```
 
-## Usage
+## Quick Start
 
-### Data Preparation
+### Launch the Demo (Recommended)
 
-The project includes a real dataset from the Anti-Fake News Center (AFNC) with over 2,700 news items. The data preparation process:
+The fastest way to get started:
 
-1. Loads and processes the AFNC dataset, categorizing news as "Real" or "Fake"
-2. Cleans and preprocesses the text data
-3. Splits the data into training and testing sets
-
-Run the data preparation:
 ```bash
+python run_app.py
+```
+
+This will:
+- Check all dependencies
+- Verify the trained model exists
+- Launch the web application at `http://localhost:8504`
+
+### Train Your Own Model
+
+If you want to train the model from scratch:
+
+```bash
+# 1. Prepare the data
 python src/core/data_preparation.py
-```
 
-### Data Visualization
+# 2. Train the model (offline SVM approach)
+python train_offline.py
 
-The project includes visualization tools to understand the prepared data:
-
-1. Label distribution charts
-2. Text length analysis
-3. Word clouds for real vs fake news
-4. Data preparation pipeline visualization
-
-Run the visualization script:
-```bash
+# 3. Generate visualizations
 python src/core/visualize_data.py
+
+# 4. Launch the app
+python run_app.py
 ```
 
-Alternatively, use the Jupyter notebook for a more interactive approach:
-```
-notebooks/03_data_visualization.ipynb
-```
+### Development Workflow
 
-### Model Training
+For development and experimentation:
 
-Train the model using:
-```
-notebooks/04_model_training.ipynb
-```
-_Note: This step can be time-consuming and may require a GPU for optimal performance._
-
-### Running the Application
-
-Start the Streamlit application:
 ```bash
+# Interactive data exploration
+jupyter notebook notebooks/02_data_exploration.ipynb
+
+# Model training notebook
+jupyter notebook notebooks/04_model_training.ipynb
+
+# Direct Streamlit launch
 streamlit run src/app.py
 ```
-
-Access the application in your browser at `http://localhost:8501`.
 
 ## Project Structure
 
 ```
 checkdi/
-├── .gitignore
-├── README.md
-├── requirements.txt
+├── README.md                    # This file
+├── CLAUDE.md                    # Development guide for Claude Code
+├── QUICK_START.md              # Quick start instructions
+├── environment.yml             # Conda environment (recommended)
+├── requirements.txt            # Pip requirements (alternative)
+├── run_app.py                  # Application launcher with dependency checks
+├── train_offline.py            # Model training script
+├── assets/
+│   └── screenshot-fake-news1.png  # Demo screenshot
 ├── data/
-│   ├── processed/
-│   ├── raw/
-│   │   └── AFNC_Opendata_export_20250728184932.csv
-│   └── visualization/
+│   ├── processed/              # Processed datasets and model artifacts
+│   ├── raw/                    # Raw AFNC dataset
+│   └── visualization/          # Generated charts and word clouds
+├── fonts/
+│   └── Noto_Sans_Thai/        # Thai font files for proper rendering
 ├── models/
-│   └── wangchanberta-finetuned-afnc/
-├── notebooks/
+│   └── offline-thai-fakenews-classifier/  # Trained SVM model
+├── notebooks/                  # Jupyter notebooks for development
 │   ├── 01_data_acquisition.ipynb
 │   ├── 02_data_exploration.ipynb
 │   ├── 03_data_preparation.ipynb
 │   ├── 03_data_visualization.ipynb
 │   └── 04_model_training.ipynb
 └── src/
-    ├── app.py
+    ├── app.py                  # Main Streamlit application
+    ├── app_final.py           # Session-state-optimized version
     └── core/
-        ├── __init__.py
-        ├── data_preparation.py
-        ├── visualize_data.py
-        ├── predictor.py
-        └── scraper.py
+        ├── data_preparation.py # Data processing pipeline
+        ├── visualize_data.py   # Visualization generation
+        ├── predictor_offline.py # Offline model predictor
+        └── scraper.py          # Data collection utilities
 ```
+
+## Demo Features
+
+### Google-like Interface
+- Clean, minimalist design inspired by Google Search
+- Responsive layout that works on desktop and mobile
+- Custom CSS styling with smooth animations
+
+### Real-time Analysis
+- Instant predictions with loading animations
+- Visual confidence bars (green for real, red for fake)
+- Detailed probability breakdowns
+
+### Example Headlines
+Try these sample headlines to test the system:
+- `รัฐบาลเปิดเผยแผนพัฒนาเศรษฐกิจในปีหน้า` (Real news)
+- `พบว่าน้ำมันมะพร้าวสามารถรักษาโรคมะเร็งได้ 100%` (Fake news)
+
+## Model Performance
+
+- **Accuracy**: 81.36% on test dataset
+- **Algorithm**: Support Vector Machine (SVM) with TF-IDF vectorization
+- **Training Data**: 2,700+ Thai news items from AFNC dataset
+- **Features**: N-gram analysis (1-2 grams) with 5000 max features
 
 ## Future Improvements
 
-- **URL-based Verification**: Enable users to paste news URLs for automatic content fetching and verification
-- **Model Enhancement**: Experiment with alternative Thai language models and data augmentation techniques
-- **Database Expansion**: Incorporate data from additional sources to improve model accuracy across news categories
-- **Cloud Deployment**: Deploy the application to cloud platforms (e.g., Hugging Face Spaces, Heroku, AWS) for public access
+- **Transformer Models**: Experiment with WangchanBERTa for potentially higher accuracy
+- **URL-based Verification**: Enable users to paste news URLs for automatic content analysis
+- **Multi-source Training**: Incorporate additional Thai news sources
+- **Cloud Deployment**: Deploy to Hugging Face Spaces or cloud platforms
+- **Batch Processing**: Add support for analyzing multiple headlines at once
 
 ## License
 
