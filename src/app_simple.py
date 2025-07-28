@@ -56,35 +56,35 @@ header {visibility: hidden;}
 
 /* Search input styling */
 .stTextInput > div > div > input {
-    border: 1px solid #dfe1e5 !important;
-    border-radius: 24px !important;
-    padding: 12px 20px !important;
-    font-size: 16px !important;
-    width: 100% !important;
-    box-shadow: none !important;
+    border: 1px solid #dfe1e5;
+    border-radius: 24px;
+    padding: 12px 20px;
+    font-size: 16px;
+    width: 100%;
+    box-shadow: none;
 }
 
 .stTextInput > div > div > input:focus {
-    border: 1px solid #4285f4 !important;
-    box-shadow: 0 2px 8px rgba(66,133,244,0.3) !important;
+    border: 1px solid #4285f4;
+    box-shadow: 0 2px 8px rgba(66,133,244,0.3);
 }
 
 /* Button styling */
 .stButton > button {
-    background-color: #f8f9fa !important;
-    border: 1px solid #f8f9fa !important;
-    border-radius: 4px !important;
-    color: #3c4043 !important;
-    font-size: 14px !important;
-    padding: 8px 20px !important;
-    cursor: pointer !important;
-    transition: box-shadow 0.2s !important;
+    background-color: #f8f9fa;
+    border: 1px solid #f8f9fa;
+    border-radius: 4px;
+    color: #3c4043;
+    font-size: 14px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: box-shadow 0.2s;
 }
 
 .stButton > button:hover {
-    box-shadow: 0 1px 1px rgba(0,0,0,.1) !important;
-    background-color: #f8f9fa !important;
-    border: 1px solid #dadce0 !important;
+    box-shadow: 0 1px 1px rgba(0,0,0,.1);
+    background-color: #f8f9fa;
+    border: 1px solid #dadce0;
 }
 
 /* Result card styling */
@@ -95,19 +95,6 @@ header {visibility: hidden;}
     padding: 1.5rem;
     margin: 1rem 0;
     border-left: 4px solid;
-    color: #000000 !important;
-}
-
-.result-card h3 {
-    color: #000000 !important;
-}
-
-.result-card p {
-    color: #000000 !important;
-}
-
-.result-card strong {
-    color: #000000 !important;
 }
 
 .result-card.fake {
@@ -209,9 +196,9 @@ def display_result(result: Dict[str, Any], text: str):
     # Create result card
     st.markdown(f"""
     <div class="result-card {card_class}">
-        <h3>{emoji} <span style="color: #000000;">{label}</span></h3>
-        <p style="color: #000000;"><strong>Text:</strong> {text}</p>
-        <p style="color: #000000;"><strong>Confidence:</strong> {confidence:.1%}</p>
+        <h3>{emoji} {label}</h3>
+        <p><strong>Text:</strong> {text}</p>
+        <p><strong>Confidence:</strong> {confidence:.1%}</p>
         <div class="confidence-bar">
             <div class="confidence-fill {card_class}" style="width: {confidence * 100}%"></div>
         </div>
@@ -258,7 +245,7 @@ def main():
         analyze_clicked = st.button("🔍 Analyze News", type='primary')
     
     # Example headlines
-    st.markdown("### 📰 Example Headlines to Test:")
+    st.markdown("### Example Headlines to Test:")
     
     examples = [
         "รัฐบาลเปิดเผยแผนพัฒนาเศรษฐกิจในปีหน้า",
@@ -268,19 +255,20 @@ def main():
         "นักวิทยาศาสตร์ค้นพบวิธีการใหม่ในการรักษาโรคหัวใจ"
     ]
     
-    # Display examples with unique keys
-    selected_example = None
+    # Display examples as clickable text
     for i, example in enumerate(examples):
-        if st.button(f"📄 {example[:50]}...", key=f"btn_example_{i}"):
-            selected_example = example
+        if st.button(f"📰 {example}", key=f"example_{i}"):
+            st.session_state.example_clicked = example
+            st.rerun()
     
-    # Handle example selection
-    if selected_example:
-        search_text = selected_example
+    # Handle example clicks
+    if hasattr(st.session_state, 'example_clicked'):
+        search_text = st.session_state.example_clicked
+        del st.session_state.example_clicked
         analyze_clicked = True
     
     # Analysis logic
-    if analyze_clicked and search_text and search_text.strip():
+    if analyze_clicked and search_text.strip():
         st.markdown("### 📊 Analysis Results")
         
         # Show loading animation
@@ -298,7 +286,7 @@ def main():
                     model_info = st.session_state.predictor.get_model_info()
                     st.json(model_info)
     
-    elif analyze_clicked and (not search_text or not search_text.strip()):
+    elif analyze_clicked and not search_text.strip():
         st.warning("⚠️ Please enter text to analyze")
     
     # About section
@@ -306,25 +294,24 @@ def main():
         st.markdown("""
         **CheckDi** is a Thai fake news detection system powered by Machine Learning.
         
-        **✨ Features:**
+        **Features:**
         - Fast analysis of Thai news headlines
         - 81.36% accuracy with SVM model
         - Confidence scores and probability breakdown
-        - Easy-to-use Google-like interface
+        - Easy-to-use interface
         
-        **📋 How to use:**
-        1. Enter a Thai news headline in the search box
-        2. Click "🔍 Analyze News" button
-        3. View the results with confidence scores
-        4. Try example headlines by clicking the 📄 buttons
+        **How to use:**
+        1. Enter a Thai news headline
+        2. Click "Analyze News" 
+        3. View the results and confidence scores
         
-        **⚠️ Note:** This is a demonstration tool. Always verify information from reliable sources.
+        **Note:** This is a demonstration tool. Always verify information from reliable sources.
         """)
     
     # Footer
     st.markdown("""
     <div class="footer">
-        CheckDi - Thai Fake News Detection System | Powered by Machine Learning ⚡
+        CheckDi - Thai Fake News Detection System | Powered by Machine Learning
     </div>
     """, unsafe_allow_html=True)
 

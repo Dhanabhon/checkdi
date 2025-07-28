@@ -79,7 +79,14 @@ def generate_wordclouds(df):
     
     # Try to find a suitable font for Thai text
     thai_fonts = [
-        '/System/Library/Fonts/Thonburi.ttc',  # macOS
+        'fonts/Noto_Sans_Thai/static/NotoSansThai-Regular.ttf',  # Local Noto Sans Thai (preferred)
+        'fonts/Noto_Sans_Thai/NotoSansThai-VariableFont_wdth,wght.ttf',  # Local Noto variable font
+        '/System/Library/Fonts/NotoSansThai.ttc',  # System Noto Sans Thai
+        '/System/Library/Fonts/Supplemental/NotoSansThai-Regular.ttf',  # Alternative Noto path
+        '/Library/Fonts/NotoSansThai.ttc',  # User installed Noto Thai
+        '/usr/share/fonts/truetype/noto/NotoSansThai-Regular.ttf',  # Linux Noto
+        '/System/Library/Fonts/Thonburi.ttc',  # macOS fallback
+        '/System/Library/Fonts/ThonburiUI.ttc',  # macOS UI variant
         '/usr/share/fonts/truetype/tlwg/Garuda.ttf',  # Linux
         'C:/Windows/Fonts/Tahoma.ttf',  # Windows
         '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'  # Alternative

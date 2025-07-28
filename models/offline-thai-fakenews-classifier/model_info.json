@@ -1,0 +1,17 @@
+{
+  "model_type": "sklearn_pipeline",
+  "model_name": "SVM",
+  "accuracy": 0.8135593220338984,
+  "label_classes": [
+    "Fake",
+    "Real"
+  ],
+  "training_samples": 232,
+  "test_samples": 59,
+  "feature_extraction": "TfidfVectorizer",
+  "max_features": 5000,
+  "ngram_range": [
+    1,
+    2
+  ]
+}

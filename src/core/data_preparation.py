@@ -270,5 +270,20 @@ if __name__ == '__main__':
     # Prepare data
     X_train, X_test, y_train, y_test, label_encoder = load_and_prepare_data()
     
+    # Save the splits for model training
+    import os
+    os.makedirs('data/processed', exist_ok=True)
+    np.save('data/processed/X_train.npy', X_train)
+    np.save('data/processed/X_test.npy', X_test)
+    np.save('data/processed/y_train.npy', y_train)
+    np.save('data/processed/y_test.npy', y_test)
+    
+    # Save the label encoder
+    import joblib
+    joblib.dump(label_encoder, 'data/processed/label_encoder.pkl')
+    
+    print(f"\n✓ Data splits saved to data/processed/")
+    print(f"✓ Label encoder saved to data/processed/label_encoder.pkl")
+    
     # Print detailed summary
     print_summary(X_train, X_test, y_train, y_test, label_encoder)

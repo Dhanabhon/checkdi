@@ -1,40 +1,37 @@
-import torch
-import numpy as np
+import joblib
 import json
 import os
+import re
 import logging
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import joblib
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List
+import numpy as np
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class FakeNewsPredictor:
+class OfflineFakeNewsPredictor:
     """
-    Thai Fake News Predictor using fine-tuned WangchanBERTa model
+    Offline Thai Fake News Predictor using sklearn models
     """
     
-    def __init__(self, model_path: str = "models/wangchanberta-finetuned-afnc"):
+    def __init__(self, model_path: str = "models/offline-thai-fakenews-classifier"):
         """
-        Initialize the predictor with a trained model
+        Initialize the predictor with a trained sklearn model
         
         Args:
             model_path (str): Path to the trained model directory
         """
         self.model_path = model_path
         self.model = None
-        self.tokenizer = None
         self.label_encoder = None
         self.model_info = None
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         # Load model components
         self._load_model()
         
     def _load_model(self):
-        """Load the trained model, tokenizer, and metadata"""
+        """Load the trained model and metadata"""
         try:
             # Check if model directory exists
             if not os.path.exists(self.model_path):
@@ -47,18 +44,13 @@ class FakeNewsPredictor:
                     self.model_info = json.load(f)
                 logger.info(f"Loaded model info: {self.model_info['model_name']}")
             else:
-                logger.warning("Model info not found, using defaults")
-                self.model_info = {'max_length': 256, 'num_labels': 2}
-            
-            # Load tokenizer
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
-            logger.info("✓ Tokenizer loaded successfully")
+                logger.warning("Model info not found")
+                self.model_info = {}
             
             # Load model
-            self.model = AutoModelForSequenceClassification.from_pretrained(self.model_path)
-            self.model.to(self.device)
-            self.model.eval()
-            logger.info(f"✓ Model loaded successfully on {self.device}")
+            model_file = os.path.join(self.model_path, 'model.pkl')
+            self.model = joblib.load(model_file)
+            logger.info("✓ Model loaded successfully")
             
             # Load label encoder
             label_encoder_path = os.path.join(self.model_path, 'label_encoder.pkl')
@@ -75,6 +67,20 @@ class FakeNewsPredictor:
         except Exception as e:
             logger.error(f"Error loading model: {e}")
             raise
+    
+    def _clean_text(self, text: str) -> str:
+        """Clean Thai text for prediction"""
+        if not text:
+            return ""
+        
+        text = str(text).strip()
+        # Remove URLs
+        text = re.sub(r'http\S+|www\S+|https\S+', '', text)
+        # Remove digits
+        text = re.sub(r'[0-9]', '', text)
+        # Remove extra whitespace
+        text = re.sub(r'\s+', ' ', text)
+        return text.strip()
     
     def predict(self, text: str, return_probabilities: bool = True) -> Dict[str, any]:
         """
@@ -94,45 +100,29 @@ class FakeNewsPredictor:
             # Clean and prepare text
             cleaned_text = self._clean_text(text)
             
-            # Tokenize
-            max_length = self.model_info.get('max_length', 256)
-            inputs = self.tokenizer(
-                cleaned_text,
-                return_tensors="pt",
-                max_length=max_length,
-                truncation=True,
-                padding=True
-            )
-            
-            # Move to device
-            inputs = {k: v.to(self.device) for k, v in inputs.items()}
-            
             # Predict
-            with torch.no_grad():
-                outputs = self.model(**inputs)
-                logits = outputs.logits
-                probabilities = torch.nn.functional.softmax(logits, dim=-1)
-                
-                # Get prediction
-                predicted_class_idx = torch.argmax(probabilities, dim=-1).item()
-                confidence = probabilities[0][predicted_class_idx].item()
-                predicted_label = self.label_encoder.classes_[predicted_class_idx]
-                
-                # Prepare result
-                result = {
-                    'prediction': predicted_label,
-                    'confidence': float(confidence),
-                    'is_fake': predicted_label == 'Fake'
-                }
-                
-                if return_probabilities:
-                    prob_dict = {}
-                    for i, class_name in enumerate(self.label_encoder.classes_):
-                        prob_dict[class_name] = float(probabilities[0][i].item())
-                    result['probabilities'] = prob_dict
-                
-                return result
-                
+            prediction = self.model.predict([cleaned_text])[0]
+            probabilities = self.model.predict_proba([cleaned_text])[0]
+            
+            # Get prediction details
+            predicted_label = self.label_encoder.classes_[prediction]
+            confidence = float(max(probabilities))
+            
+            # Prepare result
+            result = {
+                'prediction': predicted_label,
+                'confidence': confidence,
+                'is_fake': predicted_label == 'Fake'
+            }
+            
+            if return_probabilities:
+                prob_dict = {}
+                for i, class_name in enumerate(self.label_encoder.classes_):
+                    prob_dict[class_name] = float(probabilities[i])
+                result['probabilities'] = prob_dict
+            
+            return result
+            
         except Exception as e:
             logger.error(f"Error during prediction: {e}")
             raise
@@ -166,28 +156,6 @@ class FakeNewsPredictor:
         
         return results
     
-    def _clean_text(self, text: str) -> str:
-        """
-        Clean input text (basic preprocessing)
-        
-        Args:
-            text (str): Raw input text
-            
-        Returns:
-            str: Cleaned text
-        """
-        if not text:
-            return ""
-        
-        # Basic cleaning
-        text = str(text).strip()
-        
-        # Remove excessive whitespace
-        import re
-        text = re.sub(r'\s+', ' ', text)
-        
-        return text
-    
     def get_model_info(self) -> Dict[str, any]:
         """
         Get information about the loaded model
@@ -197,57 +165,40 @@ class FakeNewsPredictor:
         """
         return {
             'model_path': self.model_path,
-            'device': str(self.device),
             'model_info': self.model_info,
             'label_classes': self.label_encoder.classes_.tolist() if self.label_encoder else None,
-            'is_loaded': self.model is not None
+            'is_loaded': self.model is not None,
+            'model_type': 'sklearn_offline'
         }
 
-# Convenience functions for direct usage
-def load_predictor(model_path: str = "models/wangchanberta-finetuned-afnc") -> FakeNewsPredictor:
-    """
-    Load a fake news predictor
-    
-    Args:
-        model_path (str): Path to the trained model
-        
-    Returns:
-        FakeNewsPredictor instance
-    """
-    return FakeNewsPredictor(model_path)
+# Convenience functions
+def load_predictor(model_path: str = "models/offline-thai-fakenews-classifier") -> OfflineFakeNewsPredictor:
+    """Load an offline fake news predictor"""
+    return OfflineFakeNewsPredictor(model_path)
 
-def predict_news(text: str, model_path: str = "models/wangchanberta-finetuned-afnc") -> Dict[str, any]:
-    """
-    Quick prediction function
-    
-    Args:
-        text (str): Thai news headline
-        model_path (str): Path to the trained model
-        
-    Returns:
-        Dict containing prediction results
-    """
+def predict_news(text: str, model_path: str = "models/offline-thai-fakenews-classifier") -> Dict[str, any]:
+    """Quick prediction function"""
     predictor = load_predictor(model_path)
     return predictor.predict(text)
 
 # Test function
 def test_predictor():
-    """Test the predictor with sample data"""
+    """Test the offline predictor"""
     try:
-        # Test samples (English for testing - in production use Thai)
+        # Test samples
         test_samples = [
-            "Government announces economic development plan for next year",  # Real news
-            "New effective diabetes medication discovered by researchers",  # Real news  
-            "Scientists find miracle herb that helps lose weight in 1 week",  # Fake news
-            "Coconut oil found to cure cancer with 100% effectiveness"  # Fake news
+            "รัฐบาลเปิดเผยแผนพัฒนาเศรษฐกิจในปีหน้า",
+            "พบยารักษาโรคเบาหวานใหม่ที่มีประสิทธิภาพสูง",
+            "วิทยาศาสตร์ใหม่พบว่ากินใบย่านางช่วยลดน้ำหนักได้ภายใน 1 สัปดาห์",
+            "พบว่าน้ำมันมะพร้าวสามารถรักษาโรคมะเร็งได้ 100%"
         ]
         
-        print("Testing Fake News Predictor...")
+        print("Testing Offline Fake News Predictor...")
         print("=" * 50)
         
         # Load predictor
         predictor = load_predictor()
-        print(f"Model loaded successfully: {predictor.get_model_info()}")
+        print(f"Model info: {predictor.get_model_info()}")
         print()
         
         # Test predictions
@@ -258,11 +209,6 @@ def test_predictor():
             if 'probabilities' in result:
                 print(f"   Probabilities: {result['probabilities']}")
             print()
-        
-        # Test batch prediction
-        print("Testing batch prediction...")
-        batch_results = predictor.predict_batch(test_samples[:2])
-        print(f"Batch prediction completed: {len(batch_results)} results")
         
         print("✓ All tests passed!")
         

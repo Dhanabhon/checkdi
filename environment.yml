@@ -13,5 +13,8 @@ dependencies:
   - transformers
   - beautifulsoup4
   - requests
+  - matplotlib
+  - seaborn
+  - wordcloud
   - pip:
     - streamlit
