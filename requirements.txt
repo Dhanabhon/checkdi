@@ -1,0 +1,13 @@
+streamlit
+pandas
+numpy
+scikit-learn
+torch
+transformers
+beautifulsoup4
+requests
+matplotlib
+seaborn
+wordcloud
+joblib
+tqdm

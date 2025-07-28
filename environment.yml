@@ -1,0 +1,17 @@
+name: checkdi
+channels:
+  - defaults
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pip
+  - pandas
+  - numpy
+  - scikit-learn
+  - pytorch
+  - transformers
+  - beautifulsoup4
+  - requests
+  - pip:
+    - streamlit
