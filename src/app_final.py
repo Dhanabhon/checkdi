@@ -243,8 +243,8 @@ def main():
     <div class="subtitle">Thai Fake News Detection Tool</div>
     """, unsafe_allow_html=True)
     
-    # Search input (Google-like)
-    col1, col2, col3 = st.columns([1, 3, 1])
+    # Search input (Google-like) - wider text field
+    col1, col2, col3 = st.columns([0.2, 4.6, 0.2])
     with col2:
         search_text = st.text_input(
             "search",
